@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+PyPDF2
+"fastapi[all]"
+"python-jose[cryptography]"
+"passlib[bcrypt]"
+pymongo
+mongoose
+pyjwt
+bcrypt
+python-jose
