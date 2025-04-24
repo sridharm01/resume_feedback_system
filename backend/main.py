@@ -1,42 +1,36 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from PyPDF2 import PdfReader
 from pydantic import BaseModel
-from datetime import datetime, timedelta
+from typing import List
 import os
-import shutil
-import uuid
 import tempfile
-import jwt
 from query_engine import QueryEngine
 from dotenv import load_dotenv
 from typing import List,Dict
 from auth import router as auth_router
 from db import get_collection
-from bson import ObjectId
-from fastapi.encoders import jsonable_encoder
 from pymongo import MongoClient
-import uvicorn
 from passlib.context import CryptContext
-from typing import Union
 from schemas import UserCreate
 from auth import get_password_hash
-from auth import get_password_hash,create_access_token,get_current_user
+from auth import get_password_hash,create_access_token
+
+load_dotenv()
 
 # Connect to MongoDB
 uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 client = MongoClient(uri)
 db = client["resume_analyzer"]
 users_collection = db["users"]
+admin_collection = db["admins"]
+users_collection = get_collection("users")
+admin_collection = get_collection("admins")
 
-# Load environment variables
-load_dotenv()
-SECRET_KEY = os.getenv("SECRET_KEY", "#$%^&*dhnmdu73yb2t626bdb7")
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  # You can adjust the token expiration time
-
 
 app = FastAPI()
 app.include_router(auth_router)
@@ -99,6 +93,14 @@ class UserAnswersRequest(BaseModel):
 class UserLogin(BaseModel):
     email: str
     password: str
+
+class TestResultsRequest(BaseModel):
+    questions: List[dict]
+    resume_text: str
+
+class AnswerRequest(BaseModel):
+    selected_answer: str
+    current_question: dict
 
 def extract_text_from_pdf(file_path):
     with open(file_path, "rb") as f:
@@ -213,9 +215,7 @@ async def reset_difficulty():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class AnswerRequest(BaseModel):
-    selected_answer: str
-    current_question: dict
+
 
 @app.post("/adaptive_test/answer")
 def process_answer(request: AnswerRequest):
@@ -248,9 +248,6 @@ def process_answer(request: AnswerRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class TestResultsRequest(BaseModel):
-    questions: List[dict]
-    resume_text: str
 
 @app.post("/adaptive_test/results")
 def get_test_results(request: TestResultsRequest):
@@ -277,24 +274,38 @@ def reset_test():
         return {"message": "Test reset successfully", "new_difficulty": query_engine.difficulty_engine.get_current_difficulty()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
 
-
-users_collection = get_collection("users")
 
 @app.post("/signup")
 async def signup(user: UserCreate):
     try:
-        # Check if the user already exists
         if users_collection.find_one({"email": user.email}):
             raise HTTPException(status_code=400, detail="Email already registered.")
 
-        # Hash the password
         user_dict = user.dict()
         user_dict["password"] = get_password_hash(user_dict["password"])
 
         # Insert user into MongoDB
         result = users_collection.insert_one(user_dict)
+
+        if result.inserted_id:
+            return {"message": "Signup successful!"}
+        else:
+            raise HTTPException(status_code=500, detail="Signup failed.")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/adminsignup")
+async def signup(user: UserCreate):
+    try:
+        if admin_collection.find_one({"email": user.email}):
+            raise HTTPException(status_code=400, detail="Email already registered.")
+
+        user_dict = user.dict()
+        user_dict["password"] = get_password_hash(user_dict["password"])
+
+        result = admin_collection.insert_one(user_dict)
 
         if result.inserted_id:
             return {"message": "Signup successful!"}
@@ -323,3 +334,47 @@ async def login(user: UserLogin):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/adminlogin")
+async def login(user: UserLogin):
+    try:
+        # Find user by email
+        user_record = admin_collection.find_one({"email": user.email})
+        if not user_record:
+            raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+        # Verify password
+        if not pwd_context.verify(user.password, user_record["password"]):
+            raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+        # Generate JWT token
+        access_token = create_access_token(data={"sub": user.email})
+        
+        return {"access_token": access_token, "token_type": "bearer"}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+from process import ResumeProcessor
+
+processor = ResumeProcessor(gemini_api_key=os.getenv("GEMINI_API_KEY"))
+
+@app.post("/upload-resumes/")
+async def upload_resumes(
+    files: List[UploadFile] = File(...),
+):
+    resumes_text = []
+    filenames = []
+
+    for file in files:
+        content = await file.read()
+        text = processor.extract_text_from_pdf(content)
+        resumes_text.append(text)
+        filenames.append(file.filename)
+
+    processor.store_in_vector_db(resumes_text, filenames)
+
+    top_result = processor.generate_top_resume(resumes_text, filenames)
+
+    top_result_names = top_result.split("\n")  
+    return {"top_result": top_result_names}

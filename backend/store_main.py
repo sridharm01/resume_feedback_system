@@ -8,7 +8,6 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_nomic import NomicEmbeddings
 from langchain_chroma import Chroma  
 
-# Load environment variables
 load_dotenv()
 
 class EmbeddingModel:

@@ -18,26 +18,30 @@ function MainUser() {
   };
 
   const handleLogout = () => {
-    localStorage.clear(); 
-    setResumeData(""); 
+    localStorage.clear();
+    setResumeData("");
     navigate("/");
   };
 
   return (
     <div className="App p-6 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6" style={{ textAlign: 'center' }}>
         <h1 className="text-2xl font-bold">
           AI Resume & Feedback Query Assistant
         </h1>
         <button
           onClick={handleLogout}
+          style={{
+            position: 'absolute', right: 40, top: 70, padding: "5px 20px",
+            fontSize: "15px"
+          }}
           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-         >
+        >
           Logout
-        </button>
+        </button><br />
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6" style={{ textAlign: 'center' }}>
         <ResumeUploader onResumeData={setResumeData} />
       </div>
 
@@ -46,8 +50,8 @@ function MainUser() {
           <div className="mb-6">
             <QueryBox resumeData={resumeData} />
           </div>
-
-          <div className="bg-blue-50 p-4 rounded-lg mb-6">
+          <br /><br />
+          <div className="bg-blue-50 p-4 rounded-lg mb-6" style={{ textAlign: 'center' }}>
             <h2 className="text-lg font-medium mb-2">
               Ready to test your knowledge?
             </h2>

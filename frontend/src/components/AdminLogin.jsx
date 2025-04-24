@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from './AuthContext';
 import { useNavigate } from "react-router-dom";
 
-function Login({ toggleForm }) {
+function AdminLogin({ toggleForm }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -14,7 +14,7 @@ function Login({ toggleForm }) {
         setLoading(true);
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/token", {
+            const response = await fetch("http://127.0.0.1:8000/admin_token", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
@@ -34,7 +34,7 @@ function Login({ toggleForm }) {
 
             const data = await response.json();
             login(data.access_token);
-            navigate("/dashboard");
+            navigate("/institute-dashboard");
         } catch (error) {
             console.error("Login error:", error);
             alert("Something went wrong.");
@@ -44,7 +44,7 @@ function Login({ toggleForm }) {
 
     return (
         <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow rounded">
-            <h2 className="text-2xl font-bold mb-4">User Login</h2>
+            <h2 className="text-2xl font-bold mb-4">Institute Login</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <input
                     type="email"
@@ -88,4 +88,4 @@ function Login({ toggleForm }) {
     );
 }
 
-export default Login;
+export default AdminLogin;

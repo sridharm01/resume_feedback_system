@@ -1,15 +1,13 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-function InstituteSignup() {
+function AdminSignup({ toggleForm }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    instituteName: "",
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    contactPerson: "",
-    contactNumber: ""
   });
 
   const [error, setError] = useState("");
@@ -17,40 +15,48 @@ function InstituteSignup() {
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const {
-      instituteName,
-      email,
-      password,
-      confirmPassword,
-      contactPerson,
-      contactNumber
-    } = formData;
-
-    if (!instituteName || !email || !password || !confirmPassword || !contactPerson || !contactNumber) {
+    // Basic validations
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
       setError("All fields are required.");
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
     try {
-      // TODO: Connect with backend API
-      // await axios.post("/api/institute-signup", formData);
+      // Send form data to backend
+      const response = await fetch("http://localhost:8000/adminsignup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-      alert("Institute signup successful!");
-      navigate("/instlogin");
+      const data = await response.json();
+
+      if (data.message === "Signup successful!") {
+        toggleForm();
+      } else {
+        setError("Signup failed. Try again.");
+      }
     } catch (err) {
-      setError("Signup failed. Please try again.");
+      console.error("Error:", err);
+      setError("Signup failed. Try again.");
     }
   };
 
@@ -61,36 +67,20 @@ function InstituteSignup() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          name="instituteName"
-          placeholder="Institute Name"
-          value={formData.instituteName}
+          name="name"
+          placeholder="Full Name"
+          value={formData.name}
           onChange={handleChange}
           className="w-full p-2 border rounded"
-        />
-        <input
-          type="text"
-          name="contactPerson"
-          placeholder="Contact Person"
-          value={formData.contactPerson}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="text"
-          name="contactNumber"
-          placeholder="Contact Number"
-          value={formData.contactNumber}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
+        /><br /><br />
         <input
           type="email"
           name="email"
-          placeholder="Institute Email"
+          placeholder="Email Address"
           value={formData.email}
           onChange={handleChange}
           className="w-full p-2 border rounded"
-        />
+        /><br /><br />
         <input
           type="password"
           name="password"
@@ -98,7 +88,7 @@ function InstituteSignup() {
           value={formData.password}
           onChange={handleChange}
           className="w-full p-2 border rounded"
-        />
+        /><br /><br />
         <input
           type="password"
           name="confirmPassword"
@@ -106,25 +96,26 @@ function InstituteSignup() {
           value={formData.confirmPassword}
           onChange={handleChange}
           className="w-full p-2 border rounded"
-        />
+        /><br /><br />
         <button
           type="submit"
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
         >
           Sign Up
-        </button>
+        </button><br/><br/>
+        <div className="text-sm text-center mt-4">
+          <span>Already have an Account?</span>&nbsp;
+          <span
+            className="text-blue-500 cursor-pointer"
+            onClick={toggleForm}
+          >
+            Login
+          </span>
+        </div>
+
       </form>
-      <p className="mt-4 text-sm">
-        Already registered?{" "}
-        <span
-          className="text-blue-600 cursor-pointer"
-          onClick={() => navigate("/instlogin")}
-        >
-          Log in
-        </span>
-      </p>
     </div>
   );
 }
 
-export default InstituteSignup;
+export default AdminSignup;

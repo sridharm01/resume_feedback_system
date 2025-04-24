@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import Login from "./Login";
-import Signup from "./Signup";
 import "../toggleswitch.css";
+import AdminSignup from "./AdminSignup";
+import AdminLogin from "./AdminLogin";
 
-function UserPage() {
+function AdminPage() {
   const [isSignup, setIsSignup] = useState(true);  
 
   const toggleForm = () => {
@@ -32,9 +32,9 @@ function UserPage() {
         <div className="w-full">
 
           {isSignup ? (
-            <Signup toggleForm={toggleForm} />
+            <AdminSignup toggleForm={toggleForm} />
           ) : (
-            <Login toggleForm={toggleForm} />
+            <AdminLogin toggleForm={toggleForm} />
           )}
         </div>
       </div>
@@ -42,4 +42,4 @@ function UserPage() {
   );
 }
 
-export default UserPage;
+export default AdminPage;

@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import json
 import re
 
-# Load environment variables
 load_dotenv()
 
 class QueryEngine:

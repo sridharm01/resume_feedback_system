@@ -101,6 +101,8 @@ const QueryBox = ({ resumeData }) => {
 
   return (
     <div>
+      <br/>
+      <div style={{ textAlign: 'center' }}>
       <h3>Ask a Query</h3>
       <input
         type="text"
@@ -114,6 +116,7 @@ const QueryBox = ({ resumeData }) => {
       <button onClick={handleQuery} disabled={loading} style={{ marginLeft: "10px" }}>
         {loading ? "Fetching..." : "Get Response"}
       </button>
+      </div>
 
       {error && (
         <div style={{ color: "red", marginTop: "20px" }}>
@@ -121,9 +124,10 @@ const QueryBox = ({ resumeData }) => {
         </div>
       )}
 
+      <div style={{paddingLeft: 80, paddingRight:80}}>
       {response && formatResponse(response)}
+      </div>
     </div>
   );
 };
-
 export default QueryBox;
