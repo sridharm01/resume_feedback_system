@@ -15,7 +15,6 @@ from db import get_collection
 from pymongo import MongoClient
 from passlib.context import CryptContext
 from schemas import UserCreate
-from auth import get_password_hash
 from auth import get_password_hash,create_access_token
 
 load_dotenv()
