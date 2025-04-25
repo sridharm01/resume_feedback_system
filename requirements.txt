@@ -10,3 +10,17 @@ mongoose
 pyjwt
 bcrypt
 python-jose
+transformers
+accelerate
+bitsandbytes
+langchain
+langchain-community
+langchain-chroma
+chromadb
+langchain_nomic
+pypdf
+streamlit
+pyngrok
+PyPDF2
+google-generativeai
+resume-parser

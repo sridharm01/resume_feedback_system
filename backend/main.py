@@ -201,8 +201,6 @@ async def provide_feedback(user_answers_request: UserAnswersRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# You can also have endpoints for resetting difficulty and handling other queries as needed
 @app.post("/reset_difficulty")
 async def reset_difficulty():
     """
