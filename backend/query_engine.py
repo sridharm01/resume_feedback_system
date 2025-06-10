@@ -24,15 +24,12 @@ class QueryEngine:
     def query(self, user_query, resume_text):
         """Fetches relevant feedback from ChromaDB and generates a response using Gemini."""
         relevant_feedback = self.db_manager.retrieve_documents(user_query)
-        print(relevant_feedback)
 
         # Ensure valid text is passed
         relevant_feedback = relevant_feedback if relevant_feedback else "No relevant feedback available."
 
         # Combine resume and retrieved feedback as context
         combined_context = f"Resume:\n{resume_text}\n\nRelevant Feedback:\n{relevant_feedback}"
-        print("\nCombine Info............................")
-        print(combined_context)
 
         return self.generate_ai_response(user_query, combined_context)
         
