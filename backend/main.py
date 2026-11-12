@@ -329,8 +329,10 @@ async def login(user: UserLogin):
         
         return {"access_token": access_token, "token_type": "bearer"}
     
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error.")
     
 @app.post("/adminlogin")
 async def login(user: UserLogin):
@@ -349,8 +351,10 @@ async def login(user: UserLogin):
         
         return {"access_token": access_token, "token_type": "bearer"}
     
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error.")
     
 from process import ResumeProcessor
 

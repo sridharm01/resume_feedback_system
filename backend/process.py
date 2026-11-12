@@ -77,4 +77,4 @@ class ResumeProcessor:
                 return "No response from Gemini."
         except Exception as e:
             logger.error(f"Error generating resume analysis: {e}")
-            return f"Error generating resume analysis: {str(e)}"
+            return "Error generating resume analysis."
