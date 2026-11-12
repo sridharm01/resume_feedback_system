@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import List
 import os
 import tempfile
+import logging
 from query_engine import QueryEngine
 from dotenv import load_dotenv
 from typing import List,Dict
@@ -18,6 +19,7 @@ from schemas import UserCreate
 from auth import get_password_hash,create_access_token
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 # Connect to MongoDB
 uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
@@ -209,8 +211,11 @@ async def reset_difficulty():
     try:
         query_engine.difficulty_engine.reset()
         return {"message": "Difficulty reset to the initial state."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to reset difficulty.")
+        raise HTTPException(status_code=500, detail="Internal server error.")
 
 
 
@@ -258,10 +263,15 @@ def get_test_results(request: TestResultsRequest):
         
         # Generate feedback analysis
         feedback = query_engine.analyze_user_answers(question_answers, resume_text)
+        if isinstance(feedback, str) and feedback.startswith("Error generating feedback"):
+            raise HTTPException(status_code=500, detail="Unable to generate feedback at this time.")
         
         return {"feedback": feedback}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to analyze adaptive test results.")
+        raise HTTPException(status_code=500, detail="Internal server error.")
 
 @app.post("/adaptive_test/reset")
 def reset_test():
@@ -269,8 +279,11 @@ def reset_test():
     try:
         query_engine.difficulty_engine.reset()
         return {"message": "Test reset successfully", "new_difficulty": query_engine.difficulty_engine.get_current_difficulty()}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to reset adaptive test.")
+        raise HTTPException(status_code=500, detail="Internal server error.")
 
 
 @app.post("/signup")
@@ -290,8 +303,11 @@ async def signup(user: UserCreate):
         else:
             raise HTTPException(status_code=500, detail="Signup failed.")
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Signup failed unexpectedly.")
+        raise HTTPException(status_code=500, detail="Internal server error.")
     
 @app.post("/adminsignup")
 async def signup(user: UserCreate):

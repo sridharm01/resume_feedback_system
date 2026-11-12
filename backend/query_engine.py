@@ -4,8 +4,10 @@ from store_main import ChromaDBManager
 from dotenv import load_dotenv
 import json
 import re
+import logging
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 class QueryEngine:
     def __init__(self, gemini_api_key=None):
@@ -260,8 +262,9 @@ class QueryEngine:
 
         except json.JSONDecodeError:
             return "AI response is not in valid JSON format."
-        except Exception as e:
-            return f"Error generating feedback: {str(e)}"
+        except Exception:
+            logger.exception("Unexpected error while generating feedback.")
+            return "Error generating feedback."
 
 class AdaptiveDifficultyEngine:
     def __init__(self, min_level=1, max_level=10, initial_level=3):
